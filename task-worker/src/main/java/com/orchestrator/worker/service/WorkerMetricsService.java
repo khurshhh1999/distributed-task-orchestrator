@@ -12,6 +12,7 @@ public class WorkerMetricsService {
     private final Counter tasksDeadLettered;
     private final Counter tasksSkipped;
     private final Counter dlqProcessed;
+    private final Counter retriesRecovered;
 
     public WorkerMetricsService(MeterRegistry meterRegistry) {
         this.tasksSucceeded = Counter.builder("tasks.processed.success.total")
@@ -28,6 +29,9 @@ public class WorkerMetricsService {
                 .register(meterRegistry);
         this.dlqProcessed = Counter.builder("tasks.dlq.consumed.total")
                 .description("DLQ messages consumed for recovery visibility")
+                .register(meterRegistry);
+        this.retriesRecovered = Counter.builder("tasks.retry.recovered.total")
+                .description("Stuck retries recovered and re-queued by the scheduled sweeper")
                 .register(meterRegistry);
     }
 
@@ -49,5 +53,9 @@ public class WorkerMetricsService {
 
     public void recordDlqProcessed() {
         dlqProcessed.increment();
+    }
+
+    public void recordRetryRecovered() {
+        retriesRecovered.increment();
     }
 }

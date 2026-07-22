@@ -62,6 +62,10 @@ public class TaskEntity {
     @Column(name = "completed_at")
     private Instant completedAt;
 
+    @Version
+    @Column(nullable = false)
+    private long version;
+
     @PrePersist
     void onCreate() {
         Instant now = Instant.now();
@@ -168,5 +172,9 @@ public class TaskEntity {
 
     public void setCompletedAt(Instant completedAt) {
         this.completedAt = completedAt;
+    }
+
+    public long getVersion() {
+        return version;
     }
 }

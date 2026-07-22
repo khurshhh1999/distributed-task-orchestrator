@@ -14,14 +14,25 @@ A fault-tolerant distributed task orchestration platform built with **Java**, **
        │            │ task-retry   │◀─────────────┘
        │            │ task-dlq     │
        ▼            └──────────────┘
-┌─────────────┐
+┌─────────────┐        ▲
 │ PostgreSQL  │  Task state, retry counts, status
-└─────────────┘
-       ▲
+└─────────────┘        │
+       ▲               │  Retry Sweeper (scheduled): reclaims tasks stuck
+       │               └─ in RETRY_SCHEDULED past due and re-queues them,
+       │                  so retries survive broker/worker failures
 ┌─────────────┐
 │   Redis     │  Idempotency key deduplication
 └─────────────┘
 ```
+
+### Retry durability
+
+Retries are normally driven by the Kafka `task-retry` topic. As a safety net, the
+worker runs a **scheduled retry sweeper** that periodically scans PostgreSQL for
+tasks stranded in `RETRY_SCHEDULED` past their due time (a Kafka message was lost, a
+broker was down, or a worker crashed mid-retry) and re-queues them to `task-queue`.
+Each reclaim is guarded by an optimistic-lock `version` column, so running multiple
+worker replicas never recovers the same task twice.
 
 ### Microservices
 
@@ -36,7 +47,8 @@ A fault-tolerant distributed task orchestration platform built with **Java**, **
 - **Exponential retry backoff** — 1s → 2s → 4s → 8s → 16s (capped at 60s), up to 5 retries. Scheduled retries are never executed before their due time (the retry consumer re-queues instead of running early)
 - **Dead-letter queue (DLQ)** — Failed tasks after max retries are published to `task-dlq` and persisted with status `DEAD_LETTERED` for recovery visibility
 - **DLQ replay** — Reset and re-queue dead-lettered tasks individually or in bulk via the API, so recovered failures can be reprocessed without duplicating work
-- **Execution metrics** — Prometheus counters and timers via Spring Actuator (submitted, idempotent hits, retries, DLQ, replays, execution duration)
+- **Durable retry recovery** — A scheduled sweeper reclaims retries stranded in the database (from lost Kafka messages or crashed workers) and re-queues them, with optimistic locking to stay safe across multiple worker replicas
+- **Execution metrics** — Prometheus counters and timers via Spring Actuator (submitted, idempotent hits, retries, recovered retries, DLQ, replays, execution duration)
 - **Fault tolerance** — Manual Kafka acks, transactional DB updates, idempotent producers on both API and worker, and reservation cleanup on failed submissions
 
 ## Quick Start

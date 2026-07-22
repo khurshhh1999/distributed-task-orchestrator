@@ -24,6 +24,18 @@ spring:
     consumer:
       group-id: ${KAFKA_CONSUMER_GROUP_ID:task-worker-group}
 
+orchestrator:
+  retry-sweeper:
+    # How often the sweeper scans for stranded retries.
+    interval-ms: ${RETRY_SWEEPER_INTERVAL_MS:15000}
+    # Delay before the first scan, giving the app time to fully start.
+    initial-delay-ms: ${RETRY_SWEEPER_INITIAL_DELAY_MS:20000}
+    # Only recover retries overdue by at least this long, so the sweeper does
+    # not race with the live Kafka retry path.
+    stale-threshold-ms: ${RETRY_SWEEPER_STALE_THRESHOLD_MS:30000}
+    # Max tasks reclaimed per scan.
+    batch-size: ${RETRY_SWEEPER_BATCH_SIZE:100}
+
 server:
   port: ${SERVER_PORT:8081}
 
