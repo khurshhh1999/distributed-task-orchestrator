@@ -177,21 +177,23 @@ jobs:
           password: ${{ env.DOCKER_PASSWORD }}
 
       - name: Build and push task-api image
-        uses: docker/build-push-action@v5
+        if: env.DOCKER_USERNAME != ''
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: task-api/Dockerfile
-          push: ${{ env.DOCKER_USERNAME != '' }}
+          push: true
           tags: |
             ${{ env.DOCKER_USERNAME }}/task-orchestrator-api:latest
             ${{ env.DOCKER_USERNAME }}/task-orchestrator-api:${{ github.sha }}
 
       - name: Build and push task-worker image
-        uses: docker/build-push-action@v5
+        if: env.DOCKER_USERNAME != ''
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: task-worker/Dockerfile
-          push: ${{ env.DOCKER_USERNAME != '' }}
+          push: true
           tags: |
             ${{ env.DOCKER_USERNAME }}/task-orchestrator-worker:latest
             ${{ env.DOCKER_USERNAME }}/task-orchestrator-worker:${{ github.sha }}
