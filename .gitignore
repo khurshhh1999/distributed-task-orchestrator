@@ -26,3 +26,8 @@ logs/
 
 # Maven
 .mvn/wrapper/maven-wrapper.jar
+
+# Planning / agent docs (local only, not for the public repo)
+agent.md
+plan.md
+list.md

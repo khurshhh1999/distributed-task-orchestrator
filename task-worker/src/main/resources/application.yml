@@ -50,6 +50,10 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        "[tasks.execution.duration]": true
+        "[http.server.requests]": true
 
 logging:
   level:

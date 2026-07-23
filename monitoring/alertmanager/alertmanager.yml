@@ -1,0 +1,12 @@
+route:
+  receiver: default
+  group_by: ["alertname", "service"]
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 1h
+
+receivers:
+  - name: default
+    # No external notifier configured for local dev; alerts are visible in the
+    # Alertmanager UI (http://localhost:9093) and Prometheus (http://localhost:9090/alerts).
+    # Add a slack_configs / webhook_configs block here to fan out notifications.

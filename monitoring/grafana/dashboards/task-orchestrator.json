@@ -1,0 +1,100 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "time": { "from": "now-30m", "to": "now" },
+  "refresh": "10s",
+  "title": "Task Orchestrator",
+  "uid": "task-orchestrator",
+  "schemaVersion": 39,
+  "tags": ["task-orchestrator"],
+  "templating": { "list": [] },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Tasks Submitted (total)",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "sum(tasks_submitted_total)", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Dead-Lettered (total)",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "sum(tasks_processed_dlq_total)", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Retries Recovered by Sweeper (total)",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "sum(tasks_retry_recovered_total)", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "DLQ Replays (total)",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "sum(tasks_dlq_replayed_total)", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Submission Rate (tasks/sec)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 }, "unit": "ops" }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(tasks_submitted_total[1m]))", "legendFormat": "submitted", "datasource": { "type": "prometheus", "uid": "prometheus" } },
+        { "refId": "B", "expr": "sum(rate(tasks_idempotent_hits_total[1m]))", "legendFormat": "idempotent hits", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Processing Outcomes (rate/sec)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 }, "unit": "ops" }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(tasks_processed_success_total[1m]))", "legendFormat": "success", "datasource": { "type": "prometheus", "uid": "prometheus" } },
+        { "refId": "B", "expr": "sum(rate(tasks_processed_retry_scheduled_total[1m]))", "legendFormat": "retry scheduled", "datasource": { "type": "prometheus", "uid": "prometheus" } },
+        { "refId": "C", "expr": "sum(rate(tasks_processed_dlq_total[1m]))", "legendFormat": "dead-lettered", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Recovery Activity (rate/sec)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 }, "unit": "ops" }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(tasks_retry_recovered_total[5m]))", "legendFormat": "sweeper recoveries", "datasource": { "type": "prometheus", "uid": "prometheus" } },
+        { "refId": "B", "expr": "sum(rate(tasks_dlq_replayed_total[5m]))", "legendFormat": "dlq replays", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Task Execution Latency",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 }, "unit": "s" }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "histogram_quantile(0.50, sum(rate(tasks_execution_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50", "datasource": { "type": "prometheus", "uid": "prometheus" } },
+        { "refId": "B", "expr": "histogram_quantile(0.95, sum(rate(tasks_execution_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95", "datasource": { "type": "prometheus", "uid": "prometheus" } },
+        { "refId": "C", "expr": "histogram_quantile(0.99, sum(rate(tasks_execution_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p99", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ]
+    }
+  ]
+}

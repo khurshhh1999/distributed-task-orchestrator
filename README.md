@@ -113,6 +113,25 @@ curl -X POST http://localhost:8080/api/v1/tasks \
   -d '{"taskType":"WEBHOOK_CALLBACK","payload":"force-fail"}'
 ```
 
+## Observability
+
+`docker compose up` also starts a full metrics stack:
+
+| Tool | URL | Purpose |
+|------|-----|---------|
+| **Prometheus** | http://localhost:9090 | Scrapes `task-api` and `task-worker` `/actuator/prometheus`; evaluates alert rules |
+| **Grafana** | http://localhost:3000 (admin / admin) | Pre-provisioned **Task Orchestrator** dashboard |
+| **Alertmanager** | http://localhost:9093 | Routes fired alerts |
+
+The Grafana dashboard is auto-loaded and visualizes submission throughput,
+processing outcomes (success / retry / DLQ), sweeper recoveries, DLQ replays, and
+task-execution latency (p50/p95/p99 via histogram buckets).
+
+Prometheus alert rules (`monitoring/prometheus/alerts.yml`) cover target-down,
+dead-letter growth, retry-recovery spikes (Kafka retry path unhealthy), and p95
+execution-latency SLO breaches. To send notifications, add a `slack_configs` or
+`webhook_configs` receiver in `monitoring/alertmanager/alertmanager.yml`.
+
 ## Local Development
 
 ```bash
